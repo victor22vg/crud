@@ -15,86 +15,95 @@ public class PersonaDAO {
     
     public List<Persona> listar() {
         List<Persona> datos = new ArrayList<>();
-        String sql = "SELECT * FROM persona";
+        String sql = "SELECT * FROM usuarios"; // SQL para listar todos los usuarios
         try {
             con = conectar.getConnection();
             ps = con.prepareStatement(sql);
             rs = ps.executeQuery();
             while (rs.next()) {
                 Persona p = new Persona();
-                p.setId(rs.getInt(1));         // Primer columna: ID
-                p.setNom(rs.getString(2));      // Segunda columna: Nombre
-                p.setCorreo(rs.getString(3));   // Tercera columna: Correo
-                p.setTel(rs.getString(4));      // Cuarta columna: Teléfono
-                datos.add(p);  // Añadir el objeto Persona a la lista
+                p.setId(rs.getInt("id"));         
+                p.setNom(rs.getString("nombre"));  
+                p.setCorreo(rs.getString("correo")); 
+                p.setTel(rs.getString("telefono")); 
+                datos.add(p); 
             }
         } catch (Exception e) {
-            e.printStackTrace();  // Imprimir el error en la consola
+            e.printStackTrace(); // Mejora: log de errores
         } finally {
-            try {
-                if (rs != null) rs.close();
-                if (ps != null) ps.close();
-                if (con != null) con.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            cerrarConexion();
         }
         return datos;
     }
     
     public int agregar(Persona p) {
-        String sql = "INSERT INTO persona (Nombres, Correo, Telefono) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO usuarios (nombre, correo, telefono) VALUES (?, ?, ?)"; 
         try {
             con = conectar.getConnection();
             ps = con.prepareStatement(sql);
             ps.setString(1, p.getNom());
             ps.setString(2, p.getCorreo());
-            ps.setString(3, p.getTel());
-            return ps.executeUpdate(); // Retornar el resultado de la ejecución
+            ps.setString(3, p.getTel());   
+            return ps.executeUpdate(); // Retorna el número de filas afectadas
         } catch (Exception e) {
-            e.printStackTrace(); // Imprimir el error en la consola
-            return 0; // Retornar 0 en caso de error
+            e.printStackTrace(); // Mejora: log de errores
+            return 0; // En caso de error, retorna 0
         } finally {
-            try {
-                if (ps != null) ps.close();
-                if (con != null) con.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            cerrarConexion();
         }
     }
 
     public int Actualizar(Persona p) {
-        String sql = "UPDATE persona SET Nombres=?, Correo=?, Telefono=? WHERE Id=?";
+        String sql = "UPDATE usuarios SET nombre=?, correo=?, telefono=? WHERE id=?";
         try {
             con = conectar.getConnection();
             ps = con.prepareStatement(sql);
-            ps.setString(1, p.getNom());
-            ps.setString(2, p.getCorreo());
-            ps.setString(3, p.getTel());
-            ps.setInt(4, p.getId()); // Cambiar el índice a 4
-            return ps.executeUpdate(); // Retornar el resultado de la ejecución
+            ps.setString(1, p.getNom()); 
+            ps.setString(2, p.getCorreo()); 
+            ps.setString(3, p.getTel());    
+            ps.setInt(4, p.getId()); // Establecemos el ID para actualizar el usuario correcto
+            return ps.executeUpdate(); // Retorna el número de filas afectadas
         } catch (Exception e) {
-            e.printStackTrace(); // Imprimir el error en la consola
-            return 0; // Retornar 0 en caso de error
+            e.printStackTrace(); // Mejora: log de errores
+            return 0; // En caso de error, retorna 0
         } finally {
-            try {
-                if (ps != null) ps.close();
-                if (con != null) con.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            cerrarConexion();
         }  
     }
-            public void delete(int id){
-                String sql="delete from persona where Id="+id;
-                try {
-                    con=conectar.getConnection();
-                    ps=con.prepareStatement(sql);
-                    ps.executeUpdate();
-                } catch (Exception e) {
-                }
-                
-        }
     
+public void delete(int id) {
+    if (id <= 0) {
+        System.out.println("ID no válido: " + id);
+        return; // Evita ejecutar el DELETE si el ID no es válido
+    }
+
+    String sql = "DELETE FROM usuarios WHERE id=?";
+    try {
+        con = conectar.getConnection();
+        ps = con.prepareStatement(sql);
+        ps.setInt(1, id);  // Establecemos el ID del usuario a eliminar
+        int rowsAffected = ps.executeUpdate();
+        if (rowsAffected > 0) {
+            System.out.println("Usuario con ID " + id + " eliminado correctamente.");
+        } else {
+            System.out.println("No se encontró un usuario con ID: " + id);
+        }
+    } catch (Exception e) {
+        e.printStackTrace(); // Imprime los errores si hay
+    } finally {
+        cerrarConexion(); // Cerrar la conexión
+    }
+}
+
+
+    // Método para cerrar la conexión, PreparedStatement y ResultSet
+    private void cerrarConexion() {
+        try {
+            if (rs != null) rs.close();
+            if (ps != null) ps.close();
+            if (con != null) con.close();
+        } catch (Exception e) {
+            e.printStackTrace(); // Mejora: log de errores
+        }
+    }
 }

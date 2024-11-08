@@ -12,9 +12,9 @@ import modelo.PersonaDAO;
 
 public class Controlador implements ActionListener {
 
-    PersonaDAO dao = new PersonaDAO();
-    Vista vista = new Vista();
-    DefaultTableModel modelo = new DefaultTableModel();
+    private PersonaDAO dao = new PersonaDAO();
+    private Vista vista = new Vista();
+    private DefaultTableModel modelo = new DefaultTableModel();
 
     public Controlador(Vista v) {
         this.vista = v;
@@ -38,32 +38,105 @@ public class Controlador implements ActionListener {
             listar(vista.tabla);
         }
         if (e.getSource() == vista.btnEditar) {
-            int fila = vista.tabla.getSelectedRow();
-            if (fila == -1) {
-                JOptionPane.showMessageDialog(vista, "Debe seleccionar una fila");
-            } else {
-                int id = Integer.parseInt(vista.tabla.getValueAt(fila, 0).toString());
-                String nom = (String) vista.tabla.getValueAt(fila, 1);
-                String correo = (String) vista.tabla.getValueAt(fila, 2);
-                String tel = (String) vista.tabla.getValueAt(fila, 3);
-                vista.txtId.setText(String.valueOf(id));
-                vista.txtNombre.setText(nom);
-                vista.txtCorreo.setText(correo);
-                vista.txtTelefono.setText(tel);
-            }
+            editar();
         }
-        
         if (e.getSource() == vista.btnActualizar) {
             actualizar();
             limpiarTabla();
             listar(vista.tabla);
         }
         if (e.getSource() == vista.btnEliminar) {
-            int fila = vista.tabla.getSelectedRow();
-            if (fila == -1) {
-                JOptionPane.showMessageDialog(vista, "Debe seleccionar un Usuario");
-            } else {
-                int id = Integer.parseInt(vista.tabla.getValueAt(fila, 0).toString());
+            eliminar();
+        }
+    }
+    
+    // Limpiar la tabla antes de cargar nuevos datos
+    private void limpiarTabla() {
+        while (modelo.getRowCount() > 0) {
+            modelo.removeRow(0);
+        }
+    }
+
+    // Agregar una nueva persona al sistema
+    private void agregar() {
+        String nom = vista.txtNombre.getText();
+        String correo = vista.txtCorreo.getText();
+        String tel = vista.txtTelefono.getText();
+
+        if (nom.isEmpty() || correo.isEmpty() || tel.isEmpty()) {
+            JOptionPane.showMessageDialog(vista, "Todos los campos son obligatorios.");
+            return;
+        }
+
+        Persona p = new Persona();
+        p.setNom(nom);
+        p.setCorreo(correo);
+        p.setTel(tel);
+
+        int r = dao.agregar(p);
+        if (r == 1) {
+            JOptionPane.showMessageDialog(vista, "Usuario Agregado Con Éxito");
+            listar(vista.tabla);
+            limpiarCampos();
+        } else {
+            JOptionPane.showMessageDialog(vista, "Error al agregar usuario");
+        }
+    }
+
+    // Editar una persona seleccionada en la tabla
+    private void editar() {
+        int fila = vista.tabla.getSelectedRow();
+        if (fila == -1) {
+            JOptionPane.showMessageDialog(vista, "Debe seleccionar una fila");
+        } else {
+            int id = Integer.parseInt(vista.tabla.getValueAt(fila, 0).toString());
+            String nom = (String) vista.tabla.getValueAt(fila, 1);
+            String correo = (String) vista.tabla.getValueAt(fila, 2);
+            String tel = (String) vista.tabla.getValueAt(fila, 3);
+            vista.txtId.setText(String.valueOf(id));
+            vista.txtNombre.setText(nom);
+            vista.txtCorreo.setText(correo);
+            vista.txtTelefono.setText(tel);
+        }
+    }
+
+    // Actualizar los datos de una persona
+    private void actualizar() {
+        int id = Integer.parseInt(vista.txtId.getText());
+        String nom = vista.txtNombre.getText();
+        String correo = vista.txtCorreo.getText();
+        String tel = vista.txtTelefono.getText();
+
+        if (nom.isEmpty() || correo.isEmpty() || tel.isEmpty()) {
+            JOptionPane.showMessageDialog(vista, "Todos los campos son obligatorios.");
+            return;
+        }
+
+        Persona p = new Persona();
+        p.setId(id);
+        p.setNom(nom);
+        p.setCorreo(correo);
+        p.setTel(tel);
+
+        int r = dao.Actualizar(p);
+        if (r == 1) {
+            JOptionPane.showMessageDialog(vista, "Usuario Actualizado con Éxito");
+            listar(vista.tabla);
+            limpiarCampos();
+        } else {
+            JOptionPane.showMessageDialog(vista, "Error al actualizar el usuario");
+        }
+    }
+
+    // Eliminar una persona
+    private void eliminar() {
+        int fila = vista.tabla.getSelectedRow();
+        if (fila == -1) {
+            JOptionPane.showMessageDialog(vista, "Debe seleccionar un Usuario");
+        } else {
+            int id = Integer.parseInt(vista.tabla.getValueAt(fila, 0).toString());
+            int confirm = JOptionPane.showConfirmDialog(vista, "¿Estás seguro de eliminar este usuario?", "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
                 dao.delete(id);
                 JOptionPane.showMessageDialog(vista, "Usuario Eliminado");
                 limpiarTabla();
@@ -71,58 +144,11 @@ public class Controlador implements ActionListener {
             }
         }
     }
-    
-    void limpiarTabla() {
-        while (modelo.getRowCount() > 0) {
-            modelo.removeRow(0);
-        }
-    }
-    
-    public void actualizar() {
-        int id = Integer.parseInt(vista.txtId.getText());
-        String nom = vista.txtNombre.getText();
-        String correo = vista.txtCorreo.getText();
-        String tel = vista.txtTelefono.getText();
 
-        Persona p = new Persona(); // Crear el objeto aquí
-        p.setId(id);
-        p.setNom(nom);
-        p.setCorreo(correo);
-        p.setTel(tel); // Asegúrate de establecer también el teléfono
-
-        int r = dao.Actualizar(p);
-        if (r == 1) {
-            JOptionPane.showMessageDialog(vista, "Usuario Actualizado con Éxito");
-            listar(vista.tabla); // Actualizar la tabla después de la actualización
-            limpiarCampos(); // Limpiar campos
-        } else {
-            JOptionPane.showMessageDialog(vista, "Error al actualizar el usuario");
-        }
-    }
-    
-    public void agregar() {
-        String nom = vista.txtNombre.getText();
-        String correo = vista.txtCorreo.getText();
-        String tel = vista.txtTelefono.getText();
-
-        Persona p = new Persona(); // Crear el objeto aquí
-        p.setNom(nom);
-        p.setCorreo(correo);  
-        p.setTel(tel);
-
-        int r = dao.agregar(p);
-        if (r == 1) {
-            JOptionPane.showMessageDialog(vista, "Usuario Agregado Con Éxito");
-            listar(vista.tabla); // Actualizar la lista después de agregar
-            limpiarCampos(); // Limpiar campos
-        } else {
-            JOptionPane.showMessageDialog(vista, "Error al agregar usuario");
-        }
-    }
-
-    public void listar(JTable tabla) {
+    // Listar todas las personas en la tabla
+    private void listar(JTable tabla) {
         modelo = (DefaultTableModel) tabla.getModel();
-        modelo.setRowCount(0);  // Limpiar la tabla antes de listar
+        modelo.setRowCount(0);
         List<Persona> lista = dao.listar();
         Object[] object = new Object[4];
         for (Persona persona : lista) {
@@ -135,6 +161,7 @@ public class Controlador implements ActionListener {
         vista.tabla.setModel(modelo);
     }
 
+    // Limpiar los campos de texto en la vista
     private void limpiarCampos() {
         vista.txtId.setText("");
         vista.txtNombre.setText("");
